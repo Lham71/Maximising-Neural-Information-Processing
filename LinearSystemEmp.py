@@ -1,8 +1,11 @@
-# Revising the formulation of Variational bound for linear system , Dec 2, 2018 -- UPDATED for NEUROCOMP May 24 2019
-# x init seed0
-# seed nn_w: 10, 11, mu:15, sig:16
-# seed nn_q: 12, 13, mu:17, sig:18
-#seed eps:0 seed noise 4
+'''
+Estimation/maximization of empowerment using Variational bound for linear system 
+author: Elham 
+The following code performs joint optimization: 1st: calculation of the empowerment 
+via optimizaing variational lower bound and our proposed method of increasing the state horizon
+2nd: maximization of the empowerment using parametrization of the system
+
+'''
 
 import tensorflow as tf
 import numpy as np
@@ -37,14 +40,10 @@ noise_power = 0.1
 clip_val = 0.5
 
 
-# with open('A0,0.25 noise xt+2 clip x u elu initt.pkl', 'rb') as f:
-#     MI_A0, MI_A0_reg = pickle.load(f)
-#
-# MI_A0 = np.array(MI_A0)
-# MI_A0_reg = np.array(MI_A0_reg)
-# # print(MI_A0.shape)
-
 with tf.variable_scope('initialization'):
+    '''
+    Initializing the state space 
+    '''
 
     XM = tf.placeholder(tf.float32, shape=(None, dim), name='XM')
     A = tf.constant([[-0.5, 0.], [0., -0.5]], name="A")
@@ -58,6 +57,10 @@ xxp1, xxp2 = tf.reshape(xp1, [-1]), tf.reshape(xp2, [-1])
 X_plot = tf.stack([xxp1, xxp2], 1, name="X_plot")
 
 with tf.variable_scope('nn_w'):
+    
+    '''
+    building NN to model source (or potential actions) distribution
+    '''
 
     a1_w = layers.fully_connected(inputs=XM, num_outputs=hidden_units, activation_fn=tf.nn.elu,
                                   weights_initializer=layers.xavier_initializer(seed=1), scope='layer1_w')
@@ -80,12 +83,19 @@ with tf.variable_scope('nn_w'):
 
 
 with tf.variable_scope('u_repar'):
+    
+    '''
+    repapremtrization trick
+    '''
 
     eps_n = tf.random_normal(shape=tf.shape(sigma_w), mean=0, stddev=1, seed=0, dtype=tf.float32)
     u = (mu_w + sigma_w * eps_n)
     u_clip = tf.clip_by_value(u, -clip_val, clip_val, name='input')
 
 with tf.variable_scope('next_state'):
+    '''
+    evolving the state space through time for arbitrary number of time
+    '''
     coeff = (tf.transpose(A) * delta_t) + tf.eye(dim)
 
     noise = tf.random_normal(shape=tf.shape(sigma_w), mean=0, stddev=1, seed=4, dtype=tf.float32)
@@ -115,6 +125,10 @@ with tf.variable_scope('vector_field'):
     vector_field = tf.matmul(XM, tf.transpose(A), name='vec_field')
 
 with tf.variable_scope('nn_q', reuse=tf.AUTO_REUSE):
+    
+    '''
+    building NN to approximate variational distribution
+    '''
 
     input_concat = tf.concat([XM, X_delta_t_2], 1)
 
@@ -305,13 +319,6 @@ plt.hexbin(X_init_[:, 0], X_init_[:, 1], C=dif_reg, gridsize=40, cmap=CM.jet, bi
 plt.title('-reg ')
 plt.colorbar(ticks=v_reg_dif)
 
-name = '%s-dt%s-h%s-epoch%s-a%s-clip%snp' % (delta_t, hidden_units, epochs, learning_rate_nn, clip_val, noise_power) + \
-       'xt+5 clip x u  A 0.5 2elu LA'
-fig.savefig('/Users/elhamghazizadeh/Desktop/icmlCluster/UpdatedNeuroComp/' + name + '.png', dpi=300.)
-
-save_name = '/Users/elhamghazizadeh/Desktop/icmlCluster/UpdatedNeuroComp/dataFiles/'+ name + '.pkl'
-with open(save_name, 'wb') as f:
-    pickle.dump([X_init_, learned_MI, learned_MI_reg], f)
 
 plt.show()
 
