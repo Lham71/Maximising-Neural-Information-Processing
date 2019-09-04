@@ -8,4 +8,4 @@ https://arxiv.org/abs/1310.1863
 https://arxiv.org/abs/1509.08731
 
 
-I uploaded our team's paper on empowerment calculation/optimization on my repository. You can find my implementation of the paper .
+I uploaded our team's paper on empowerment calculation/optimization on my repository. You can find my implementation of the paper available in this repository.
