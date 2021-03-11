@@ -6,6 +6,6 @@ Some useful papers about empowerment:
 https://arxiv.org/abs/1310.1863
 
 https://arxiv.org/abs/1509.08731
-
+*********************
 
 I uploaded our team's paper on empowerment calculation/optimization on my repository. You can find my implementation of the paper available in this repository. In our work we have proposed a new method for empowerment estimation to reduce the computational complexity of empowerment. 
